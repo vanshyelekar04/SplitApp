@@ -10,7 +10,15 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+// Register services
+builder.Services.AddControllers()
+    .AddDataAnnotationsLocalization()
+    .ConfigureApiBehaviorOptions(opts =>
+    {
+        opts.InvalidModelStateResponseFactory = ctx =>
+            new BadRequestObjectResult(new { success = false, message = "Invalid inputs", errors = ctx.ModelState });
+    });
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -19,15 +27,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-
-builder.Services.AddControllers()
-    .AddDataAnnotationsLocalization()
-    .ConfigureApiBehaviorOptions(opts =>
-    {
-        opts.InvalidModelStateResponseFactory = ctx =>
-            new BadRequestObjectResult(new { success = false, message = "Invalid inputs", errors = ctx.ModelState });
-    });
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -46,6 +45,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
+// Migration + Seeding block
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -54,29 +54,17 @@ using (var scope = app.Services.CreateScope())
     if (!db.People.Any())
     {
         db.People.AddRange(
-            new Domain.Entities.Person { Id = Guid.NewGuid(), Name = "Shantanu" },
-            new Domain.Entities.Person { Id = Guid.NewGuid(), Name = "Sanket" },
-            new Domain.Entities.Person { Id = Guid.NewGuid(), Name = "Om" }
+            new Domain.Entities.Person { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), Name = "Shantanu" },
+            new Domain.Entities.Person { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), Name = "Sanket" },
+            new Domain.Entities.Person { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), Name = "Om" }
         );
         db.SaveChanges();
     }
 
+    await DbSeeder.SeedAsync(db); // Optional: Add further seeding logic here
 }
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); // Auto apply EF Core migrations
-    await DbSeeder.SeedAsync(context); // Seed default data
-}
-
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db);
-}
-
+// Swagger only in dev
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -84,5 +72,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();
