@@ -60,7 +60,16 @@ using (var scope = app.Services.CreateScope())
         );
         db.SaveChanges();
     }
+
 }
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate(); // Auto apply EF Core migrations
+    await DbSeeder.SeedAsync(context); // Seed default data
+}
+
 
 using (var scope = app.Services.CreateScope())
 {
