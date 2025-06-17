@@ -1,6 +1,6 @@
 # 🚀 Split App – Backend
 
-A minimal REST API for splitting group expenses, inspired by apps like Splitwise and Google Pay.
+A minimal REST API for splitting group expenses, inspired by apps like Splitwise and Google Pay Bills Split.
 
 ## Table of Contents
 
@@ -19,87 +19,72 @@ A minimal REST API for splitting group expenses, inspired by apps like Splitwise
 
 ## 1. Overview
 
-This API allows users to split expenses among a group, providing functionality to add, view, edit, and delete expenses, and compute settlement recommendations.
+This API lets users split expenses, view/edit/delete them, and calculate balances & optimized settlement summaries.
+
+---
 
 ## 2. Features
 
 - 🧾 Add, view, edit, delete expenses  
 - 👥 Auto-derived list of participants  
-- ⚖️ Equal-share splitting  
-- 💰 Calculate balances & optimized settlements  
-- 🚨 Input validation & error handling  
+- ⚖️ Equal-share splitting by default  
+- 💰 Calculate individual balances & min-transactions settlements  
+- 🚨 Validation and clear HTTP error responses
+
+---
 
 ## 3. Tech Stack
 
 - **Backend**: ASP.NET Core 8  
 - **Database**: PostgreSQL (hosted on Render.com)  
-- **Authentication**: JWT Bearer tokens  
-- **ORM**: EF Core  
-- **Password Hashing**: BCrypt  
+- **Authentication**: JWT Bearer Tokens  
+- **ORM**: Entity Framework Core  
+- **Password Hashing**: BCrypt
+
+---
 
 ## 4. Getting Started
 
 ### Prerequisites
 
 - .NET 8 SDK  
-- PostgreSQL database (or use the default Render-hosted one)  
+- PostgreSQL database (or use the default Render-hosted one)
 
 ### Local Setup
 
-1. **Clone the repository**  
-   ```bash
-   git clone https://github.com/vanshyelekar04/SplitApp.git
-   cd SplitApp/WebAPI
-Stage important project changes
-
-bash
-Copy
-Edit
-git add \
-  ../Application/Application.csproj \
-  ../Infrastructure/Services/AuthService.cs \
-  ../Infrastructure/Data/AppDbContext.cs \
-  ../Infrastructure/Services/ExpenseService.cs
-git commit -m "Add updated services and configurations"
+```bash
+git clone https://github.com/vanshyelekar04/SplitApp.git
+cd SplitApp/WebAPI
 Configure appsettings.json
+Update these values with your own credentials:
 
-Add your PostgreSQL connection string under ConnectionStrings:DefaultConnection
+ConnectionStrings:DefaultConnection → your PostgreSQL connection string
 
-Ensure JwtSettings has valid Key, Issuer, and Audience
+JwtSettings:Key, Issuer, Audience → secure random strings
 
-Restore packages & build
-
+Build and Run
 bash
 Copy
 Edit
 dotnet restore
 dotnet build
-Run application
-
-bash
-Copy
-Edit
 dotnet run
-Swagger UI available at: https://localhost:<port>/swagger
+Access Swagger UI at: https://localhost:<port>/swagger
 
 5. API Endpoints
-Use these endpoints after logging in (attach Authorization: Bearer <token>):
-
 Method	URL	Description
 POST	/auth/register	Register a new user
 POST	/auth/login	Login and receive JWT
 GET	/expenses	List all expenses
 POST	/expenses	Add a new expense
-PUT	/expenses/{id}	Update existing expense by ID
-DELETE	/expenses/{id}	Delete an expense by ID
-GET	/people	Get list of people involved
-GET	/balances	View current balances by person
-GET	/settlements	Get optimized settlement summary
+PUT	/expenses/{id}	Update existing expense
+DELETE	/expenses/{id}	Delete an expense
+GET	/people	Get list of all participants
+GET	/balances	View balance per person
+GET	/settlements	Get simplified settlements
 
 6. Sample Requests / Test Cases
-Full Flow:
 Register
-
 json
 Copy
 Edit
@@ -109,10 +94,16 @@ POST /auth/register
   "email": "shan@example.com",
   "password": "P@ssw0rd!"
 }
-Login → Receive JWT
-
-Create Expenses
-
+Login
+json
+Copy
+Edit
+POST /auth/login
+{
+  "email": "shan@example.com",
+  "password": "P@ssw0rd!"
+}
+Add Expense
 json
 Copy
 Edit
@@ -121,75 +112,68 @@ POST /expenses
   "amount": 600.00,
   "description": "Dinner",
   "paidBy": "Shantanu",
-  "sharedWith": ["Shantanu","Sanket","Om"]
+  "sharedWith": ["Shantanu", "Sanket", "Om"]
 }
-View / Update / Delete Expenses
+Edge Case Examples
+Add with negative amount → 400 Bad Request
 
-Summary Operations
+Missing fields → 400 Bad Request
 
-GET /people
+Update/Delete with non-existent ID → 404 Not Found
 
-GET /balances
-
-GET /settlements
-
-Edge Cases:
-Negative amount → returns 400
-
-Missing fields → returns 400
-
-Non-existent ID for update/delete → returns 404
-
-No expenses → returns empty collections
+No expenses yet → returns empty arrays
 
 7. Postman Collection 📬
-All endpoints and example requests are included in this Postman collection:
-👉 Import the collection here
+🔗 Split App – Postman Collection - https://web.postman.co/workspace/e8c0b6e0-d293-445e-b550-ebda8b91fbe9
 
-Steps to use:
+How to Use:
+Import the collection in Postman
 
-Click the link above and import into Postman.
+Set {{base_url}} = https://split-app-api.onrender.com
 
-Set the {{base_url}} environment variable to https://split-app-api.onrender.com.
+Register → Login → Copy JWT token
 
-Inside collection:
+Set token as {{auth_token}} in headers
 
-First call Register, then Login
+Follow folders:
 
-Copy the received token into {{auth_token}} environment variable
+Expense Management
 
-Use {{auth_token}} in Authorization header for protected calls
+Settlements
 
-Run through folders in sequence:
-
-Expense Management → Settlements & Summary → Edge Cases
+Edge Cases
 
 8. Deployment
-Live API URL:
+Live URL:
 
 arduino
 Copy
 Edit
 https://split-app-api.onrender.com
-EF Core migrations run automatically at startup
+EF Core migrations run at app startup. Data is seeded for testing.
 
-Ensure environment variables are set for DB connection and JWT keys
+Required Environment Variables:
 
+env
+Copy
+Edit
+ConnectionStrings__DefaultConnection=your_pg_url
+JwtSettings__Key=your_secure_key
+JwtSettings__Issuer=your_issuer
+JwtSettings__Audience=your_audience
 9. Validation & Error Handling
-Data annotations: [Required], [Range], [StringLength], [MinLength]
+Uses [Required], [Range], [MinLength], etc.
 
-Returns HTTP 400 for bad inputs, 404 for missing resources
+400 for bad requests, 404 for not found
 
-Error responses include a success: false flag and helpful message
+Responses always in format:
 
-10. Roadmap & Enhancements
-Areas for future work:
+json
+Copy
+Edit
+{
+  "success": false,
+  "message": "Error details here"
+}
 
-Support non-equal splits (percentage or exact amounts)
-
-Add expense categories & reporting
-
-Enable recurring expenses
-
-Build a simple web or mobile frontend
-
+💻 Developed by Vansh Pravin Yelekar
