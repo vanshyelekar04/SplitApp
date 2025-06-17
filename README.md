@@ -1,179 +1,120 @@
-# 🚀 Split App – Backend
+Here's a properly formatted and complete `README.md` with raw links:
 
-A minimal REST API for splitting group expenses, inspired by apps like Splitwise and Google Pay Bills Split.
+```markdown
+# 🚀 Split App – Backend API
+
+A REST API for splitting group expenses with balance calculations and settlement summaries.
 
 ## Table of Contents
+1. [Features](#features)
+2. [Tech Stack](#tech-stack)  
+3. [API Endpoints](#api-endpoints)  
+4. [Setup](#setup)  
+5. [Usage Examples](#usage-examples)  
+6. [Deployment](#deployment)  
+7. [Postman Collection](#postman-collection)
 
-1. [Overview](#overview)  
-2. [Features](#features)  
-3. [Tech Stack](#tech-stack)  
-4. [Getting Started](#getting-started)  
-5. [API Endpoints](#api-endpoints)  
-6. [Sample Requests / Test Cases](#sample-requests--test-cases)  
-7. [Postman Collection](#postman-collection)  
-8. [Deployment](#deployment)  
-9. [Validation & Error Handling](#validation--error-handling)  
-10. [Roadmap & Enhancements](#roadmap--enhancements)
+## Features
+- ✅ Expense management (CRUD operations)
+- 👥 Automatic participant tracking
+- ⚖️ Equal expense splitting
+- 💰 Balance calculations
+- 🔄 Optimal settlement suggestions
+- 🔒 JWT Authentication
 
----
+## Tech Stack
+| Component       | Technology |
+|----------------|------------|
+| Backend        | .NET 8     |
+| Database       | PostgreSQL |
+| ORM            | EF Core 8  |
+| Authentication | JWT        |
+| Hosting        | Render     |
 
-## 1. Overview
+## API Endpoints
 
-This API lets users split expenses, view/edit/delete them, and calculate balances & optimized settlement summaries.
+### Authentication
+| Method | Endpoint       | Description          |
+|--------|----------------|----------------------|
+| POST   | `/auth/register` | Register new user    |
+| POST   | `/auth/login`    | Login and get JWT    |
 
----
+### Expenses
+| Method | Endpoint          | Description            |
+|--------|-------------------|------------------------|
+| GET    | `/expenses`       | List all expenses      |
+| POST   | `/expenses`       | Create new expense     |
+| PUT    | `/expenses/{id}`  | Update expense         |
+| DELETE | `/expenses/{id}`  | Delete expense         |
 
-## 2. Features
+### Calculations
+| Method | Endpoint        | Description              |
+|--------|-----------------|--------------------------|
+| GET    | `/people`       | List all participants    |
+| GET    | `/balances`     | Show individual balances |
+| GET    | `/settlements`  | Get settlement plan      |
 
-- 🧾 Add, view, edit, delete expenses  
-- 👥 Auto-derived list of participants  
-- ⚖️ Equal-share splitting by default  
-- 💰 Calculate individual balances & min-transactions settlements  
-- 🚨 Validation and clear HTTP error responses
+## Setup
 
----
-
-## 3. Tech Stack
-
-- **Backend**: ASP.NET Core 8  
-- **Database**: PostgreSQL (hosted on Render.com)  
-- **Authentication**: JWT Bearer Tokens  
-- **ORM**: Entity Framework Core  
-- **Password Hashing**: BCrypt
-
----
-
-## 4. Getting Started
-
-### Prerequisites
-
-- .NET 8 SDK  
-- PostgreSQL database (or use the default Render-hosted one)
-
-### Local Setup
-
+1. Clone repository:
 ```bash
 git clone https://github.com/vanshyelekar04/SplitApp.git
 cd SplitApp/WebAPI
-Configure appsettings.json
-Update these values with your own credentials:
+```
 
-ConnectionStrings:DefaultConnection → your PostgreSQL connection string
+2. Configure `appsettings.json`:
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Your_PostgreSQL_Connection_String"
+  },
+  "JwtSettings": {
+    "Key": "Your_256-bit_Secret_Key",
+    "Issuer": "Your_Issuer",
+    "Audience": "Your_Audience"
+  }
+}
+```
 
-JwtSettings:Key, Issuer, Audience → secure random strings
-
-Build and Run
-bash
-Copy
-Edit
+3. Run the application:
+```bash
 dotnet restore
-dotnet build
 dotnet run
-Access Swagger UI at: https://localhost:<port>/swagger
+```
 
-5. API Endpoints
-Method	URL	Description
-POST	/auth/register	Register a new user
-POST	/auth/login	Login and receive JWT
-GET	/expenses	List all expenses
-POST	/expenses	Add a new expense
-PUT	/expenses/{id}	Update existing expense
-DELETE	/expenses/{id}	Delete an expense
-GET	/people	Get list of all participants
-GET	/balances	View balance per person
-GET	/settlements	Get simplified settlements
+## Usage Examples
 
-6. Sample Requests / Test Cases
-Register
-json
-Copy
-Edit
-POST /auth/register
-{
-  "username": "Shantanu",
-  "email": "shan@example.com",
-  "password": "P@ssw0rd!"
-}
-Login
-json
-Copy
-Edit
-POST /auth/login
-{
-  "email": "shan@example.com",
-  "password": "P@ssw0rd!"
-}
-Add Expense
-json
-Copy
-Edit
-POST /expenses
+### Create Expense
+```http
+POST https://split-app-api.onrender.com/expenses
+Content-Type: application/json
+Authorization: Bearer {token}
+
 {
   "amount": 600.00,
   "description": "Dinner",
-  "paidBy": "Shantanu",
-  "sharedWith": ["Shantanu", "Sanket", "Om"]
+  "paidBy": "Alice",
+  "sharedWith": ["Alice", "Bob", "Charlie"]
 }
-Edge Case Examples
-Add with negative amount → 400 Bad Request
+```
 
-Missing fields → 400 Bad Request
+### Get Balances
+```http
+GET https://split-app-api.onrender.com/balances
+Authorization: Bearer {token}
+```
 
-Update/Delete with non-existent ID → 404 Not Found
+## Deployment
+Live API endpoint:  
+[https://split-app-api.onrender.com](https://split-app-api.onrender.com)
 
-No expenses yet → returns empty arrays
+## Postman Collection
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://god.gw.postman.com/run-collection/e8c0b6e0-d293-445e-b550-ebda8b91fbe9?action=collection%2Ffork&collection-url=entityId%3De8c0b6e0-d293-445e-b550-ebda8b91fbe9%26entityType%3Dcollection%26workspaceId%3D7e8b0b6e-0d29-434e-b550-ebda8b91fbe9)
 
-7. Postman Collection 📬
-🔗 Split App – Postman Collection - https://web.postman.co/workspace/e8c0b6e0-d293-445e-b550-ebda8b91fbe9
+Direct collection link:  
+[https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9](https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
 
-How to Use:
-Import the collection in Postman
+---
 
-Set {{base_url}} = https://split-app-api.onrender.com
-
-Register → Login → Copy JWT token
-
-Set token as {{auth_token}} in headers
-
-Follow folders:
-
-Expense Management
-
-Settlements
-
-Edge Cases
-
-8. Deployment
-Live URL:
-
-arduino
-Copy
-Edit
-https://split-app-api.onrender.com
-EF Core migrations run at app startup. Data is seeded for testing.
-
-Required Environment Variables:
-
-env
-Copy
-Edit
-ConnectionStrings__DefaultConnection=your_pg_url
-JwtSettings__Key=your_secure_key
-JwtSettings__Issuer=your_issuer
-JwtSettings__Audience=your_audience
-9. Validation & Error Handling
-Uses [Required], [Range], [MinLength], etc.
-
-400 for bad requests, 404 for not found
-
-Responses always in format:
-
-json
-Copy
-Edit
-{
-  "success": false,
-  "message": "Error details here"
-}
-
-💻 Developed by Vansh Pravin Yelekar
+Developed by [Vansh Yelekar](https://github.com/vanshyelekar04)
+```
