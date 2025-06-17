@@ -1,4 +1,4 @@
-Here's a properly formatted and complete `README.md` with raw links:
+Here's the fully updated `README.md` with detailed JWT token steps and improved Postman collection instructions:
 
 ```markdown
 # 🚀 Split App – Backend API
@@ -10,9 +10,11 @@ A REST API for splitting group expenses with balance calculations and settlement
 2. [Tech Stack](#tech-stack)  
 3. [API Endpoints](#api-endpoints)  
 4. [Setup](#setup)  
-5. [Usage Examples](#usage-examples)  
-6. [Deployment](#deployment)  
-7. [Postman Collection](#postman-collection)
+5. [Authentication Flow](#authentication-flow)  
+6. [Usage Examples](#usage-examples)  
+7. [Deployment](#deployment)  
+8. [Postman Collection](#postman-collection)  
+9. [Troubleshooting](#troubleshooting)
 
 ## Features
 - ✅ Expense management (CRUD operations)
@@ -71,7 +73,8 @@ cd SplitApp/WebAPI
   "JwtSettings": {
     "Key": "Your_256-bit_Secret_Key",
     "Issuer": "Your_Issuer",
-    "Audience": "Your_Audience"
+    "Audience": "Your_Audience",
+    "ExpiryInMinutes": 60
   }
 }
 ```
@@ -79,7 +82,47 @@ cd SplitApp/WebAPI
 3. Run the application:
 ```bash
 dotnet restore
+dotnet build
 dotnet run
+```
+
+## Authentication Flow
+
+### 1. Register a New User
+```http
+POST https://split-app-api.onrender.com/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "P@ssw0rd123!"
+}
+```
+
+### 2. Login to Get JWT Token
+```http
+POST https://split-app-api.onrender.com/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "P@ssw0rd123!"
+}
+```
+
+Response:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "expires": "2025-06-18T12:00:00Z"
+}
+```
+
+### 3. Use the Token
+Add to request headers:
+```text
+Authorization: Bearer your_jwt_token_here
 ```
 
 ## Usage Examples
@@ -88,7 +131,7 @@ dotnet run
 ```http
 POST https://split-app-api.onrender.com/expenses
 Content-Type: application/json
-Authorization: Bearer {token}
+Authorization: Bearer your_jwt_token_here
 
 {
   "amount": 600.00,
@@ -98,10 +141,18 @@ Authorization: Bearer {token}
 }
 ```
 
-### Get Balances
+### Update Expense
 ```http
-GET https://split-app-api.onrender.com/balances
-Authorization: Bearer {token}
+PUT https://split-app-api.onrender.com/expenses/3676daae-2103-42a1-b375-343b528b0f35
+Content-Type: application/json
+Authorization: Bearer your_jwt_token_here
+
+{
+  "amount": 650.00,
+  "description": "Updated Dinner",
+  "paidBy": "Om",
+  "sharedWith": ["Om", "Shantanu"]
+}
 ```
 
 ## Deployment
@@ -109,12 +160,71 @@ Live API endpoint:
 [https://split-app-api.onrender.com](https://split-app-api.onrender.com)
 
 ## Postman Collection
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/vanshyelekar/workspace/split-app/collection/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
 
-Direct collection link:  
-[https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9](https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
+### Import Instructions
+1. **Download Collection**:  
+   [Raw Collection JSON](https://raw.githubusercontent.com/vanshyelekar04/SplitApp/main/postman/SplitApp.postman_collection.json)
+
+2. **Set Up Environment**:
+   - Create new environment in Postman
+   - Add variables:
+     ```text
+     base_url = https://split-app-api.onrender.com
+     auth_token = {{jwt_token}}
+     ```
+
+3. **Run in Postman**:  
+   [![Run in Postman](https://run.pstmn.io/button.svg)](https://web.postman.co/workspace/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
+
+   **Direct Link for Postman Collection**
+   https://web.postman.co/workspace/e8c0b6e0-d293-445e-b550-ebda8b91fbe9
+
+
+
+### Collection Structure
+1. **Authentication**
+   - Register user
+   - Login and save token
+
+2. **Expense Management**
+   - Create, read, update, delete expenses
+
+3. **Calculations**
+   - Get balances
+   - View settlements
+
+4. **Test Cases**
+   - Error scenarios
+   - Validation tests
+
+## Troubleshooting
+
+### Common Issues
+| Error | Solution |
+|-------|----------|
+| 401 Unauthorized | Verify token is valid and in Authorization header |
+| 404 Not Found | Check endpoint URL and ID parameters |
+| 400 Bad Request | Validate request body matches schema |
+| Token Expired | Re-login to get new token |
+
+### Debugging Tips
+1. Check server logs for errors
+2. Verify database connection
+3. Test with Postman's "Console" view
+4. Ensure CORS is properly configured
 
 ---
 
 Developed by [Vansh Yelekar](https://github.com/vanshyelekar04)
 ```
+
+Key improvements:
+1. Added complete **authentication flow** with register/login examples
+2. Included **raw JSON collection link** for direct download
+3. Enhanced **troubleshooting section** with common issues table
+4. Added **environment setup instructions** for Postman
+5. Improved **code examples** with realistic scenarios
+6. Added **token expiration** handling notes
+7. Structured the Postman section for better usability
+
+The Postman button should now work reliably, and users have multiple ways to access the collection (button, raw JSON, and workspace link).
