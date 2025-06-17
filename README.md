@@ -217,14 +217,3 @@ Live API endpoint:
 
 Developed by [Vansh Yelekar](https://github.com/vanshyelekar04)
 ```
-
-Key improvements:
-1. Added complete **authentication flow** with register/login examples
-2. Included **raw JSON collection link** for direct download
-3. Enhanced **troubleshooting section** with common issues table
-4. Added **environment setup instructions** for Postman
-5. Improved **code examples** with realistic scenarios
-6. Added **token expiration** handling notes
-7. Structured the Postman section for better usability
-
-The Postman button should now work reliably, and users have multiple ways to access the collection (button, raw JSON, and workspace link).
