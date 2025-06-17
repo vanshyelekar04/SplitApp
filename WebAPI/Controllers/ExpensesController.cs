@@ -38,6 +38,7 @@ public class ExpensesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateExpense(Guid id, [FromBody] UpdateExpenseRequest request)
     {
+        Console.WriteLine($"[PUT] Called UpdateExpense with ID: {id}");
         try
         {
             var result = await _service.UpdateExpenseAsync(id, request);
@@ -45,9 +46,11 @@ public class ExpensesController : ControllerBase
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[ERROR] Update failed: {ex.Message}");
             return NotFound(new { success = false, message = ex.Message });
         }
     }
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteExpense(Guid id)
