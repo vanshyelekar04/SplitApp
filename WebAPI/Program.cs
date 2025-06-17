@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces;
-using Application.Settings;
+using Application.Common.Settings;
 using Infrastructure.Data;
 using Infrastructure.Seed;
 using Infrastructure.Services;
