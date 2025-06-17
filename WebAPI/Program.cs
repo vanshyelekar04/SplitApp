@@ -1,4 +1,5 @@
 ﻿using Application.Interfaces;
+using Application.Settings;
 using Infrastructure.Data;
 using Infrastructure.Seed;
 using Infrastructure.Services;
@@ -9,6 +10,10 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Bind JWT config
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
 // Register services
 builder.Services.AddControllers()
@@ -31,15 +36,14 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        var jwt = builder.Configuration.GetSection("JwtSettings");
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwt["Issuer"],
+            ValidIssuer = jwtSettings.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwt["Audience"],
+            ValidAudience = jwtSettings.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
         };
     });
 
@@ -61,10 +65,9 @@ using (var scope = app.Services.CreateScope())
         db.SaveChanges();
     }
 
-    await DbSeeder.SeedAsync(db); // Optional: Add further seeding logic here
+    await DbSeeder.SeedAsync(db);
 }
 
-// Swagger only in dev
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
