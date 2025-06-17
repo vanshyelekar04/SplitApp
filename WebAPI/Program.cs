@@ -11,17 +11,31 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Bind JWT config
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+// --- Bind and validate JWT settings ---
+var jwtSection = builder.Configuration.GetSection("JwtSettings");
+var jwtSettings = jwtSection.Get<JwtSettings>();
 
-// Register services
+if (jwtSettings == null || string.IsNullOrWhiteSpace(jwtSettings.Key) ||
+    string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
+    string.IsNullOrWhiteSpace(jwtSettings.Audience))
+{
+    throw new InvalidOperationException("JWT settings are missing or incorrectly configured in appsettings.json.");
+}
+
+builder.Services.Configure<JwtSettings>(jwtSection);
+
+// --- Register services ---
 builder.Services.AddControllers()
     .AddDataAnnotationsLocalization()
     .ConfigureApiBehaviorOptions(opts =>
     {
         opts.InvalidModelStateResponseFactory = ctx =>
-            new BadRequestObjectResult(new { success = false, message = "Invalid inputs", errors = ctx.ModelState });
+            new BadRequestObjectResult(new
+            {
+                success = false,
+                message = "Invalid inputs",
+                errors = ctx.ModelState
+            });
     });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -43,13 +57,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidAudience = jwtSettings.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            ValidateLifetime = true
         };
     });
 
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
-// Migration + Seeding block
+// --- Run EF Migrations and seed data ---
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -68,6 +85,7 @@ using (var scope = app.Services.CreateScope())
     await DbSeeder.SeedAsync(db);
 }
 
+// --- Configure Middleware ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
