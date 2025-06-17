@@ -109,7 +109,7 @@ Live API endpoint:
 [https://split-app-api.onrender.com](https://split-app-api.onrender.com)
 
 ## Postman Collection
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://god.gw.postman.com/run-collection/e8c0b6e0-d293-445e-b550-ebda8b91fbe9?action=collection%2Ffork&collection-url=entityId%3De8c0b6e0-d293-445e-b550-ebda8b91fbe9%26entityType%3Dcollection%26workspaceId%3D7e8b0b6e-0d29-434e-b550-ebda8b91fbe9)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://www.postman.com/vanshyelekar/workspace/split-app/collection/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
 
 Direct collection link:  
 [https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9](https://www.postman.com/collections/e8c0b6e0-d293-445e-b550-ebda8b91fbe9)
