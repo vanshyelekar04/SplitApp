@@ -1,10 +1,11 @@
 ﻿using Application.DTOs;
 using Application.Exceptions;
 using Application.Interfaces;
+using Application.Common.Settings;
 using Domain.Entities;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,12 +16,12 @@ namespace Infrastructure.Services;
 public class AuthService : IAuthService
 {
     private readonly AppDbContext _context;
-    private readonly IConfiguration _config;
+    private readonly JwtSettings _jwtSettings;
 
-    public AuthService(AppDbContext context, IConfiguration config)
+    public AuthService(AppDbContext context, IOptions<JwtSettings> jwtOptions)
     {
         _context = context;
-        _config = config;
+        _jwtSettings = jwtOptions.Value;
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
@@ -38,7 +39,11 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return new AuthResponse { Token = GenerateToken(user), Username = user.Username };
+        return new AuthResponse
+        {
+            Token = GenerateToken(user),
+            Username = user.Username
+        };
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -47,15 +52,21 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid credentials.");
 
-        return new AuthResponse { Token = GenerateToken(user), Username = user.Username };
+        return new AuthResponse
+        {
+            Token = GenerateToken(user),
+            Username = user.Username
+        };
     }
 
     private string GenerateToken(User user)
     {
-        var jwt = _config.GetSection("Jwt");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
+        if (string.IsNullOrWhiteSpace(_jwtSettings.Key))
+            throw new InvalidOperationException("JWT Key is not configured properly.");
 
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -64,11 +75,12 @@ public class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: jwt["Issuer"],
-            audience: jwt["Audience"],
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
             claims: claims,
             expires: DateTime.UtcNow.AddHours(12),
-            signingCredentials: creds);
+            signingCredentials: creds
+        );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
