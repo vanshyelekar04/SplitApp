@@ -66,23 +66,23 @@ public class ExpenseService : IExpenseService
         expense.Amount = request.Amount;
         expense.Description = request.Description;
         expense.PaidBy = request.PaidBy;
-        expense.Shares.Clear();
+
+        // Explicitly remove previous shares
+        _context.ExpenseShares.RemoveRange(expense.Shares);
 
         var perHead = Math.Round(request.Amount / request.SharedWith.Count, 2);
 
-        foreach (var person in request.SharedWith)
+        expense.Shares = request.SharedWith.Select(person => new ExpenseShare
         {
-            expense.Shares.Add(new ExpenseShare
-            {
-                Person = person,
-                ShareAmount = perHead,
-                ExpenseId = expense.Id
-            });
-        }
+            Person = person,
+            ShareAmount = perHead,
+            ExpenseId = expense.Id
+        }).ToList();
 
         await _context.SaveChangesAsync();
         return MapToDTO(expense);
     }
+
 
     public async Task<bool> DeleteExpenseAsync(Guid id)
     {
