@@ -57,40 +57,56 @@ public class ExpenseService : IExpenseService
 
     public async Task<ExpenseDTO> UpdateExpenseAsync(Guid id, UpdateExpenseRequest request)
     {
+        // First verify the expense exists
+        if (!await _context.Expenses.AnyAsync(e => e.Id == id))
+        {
+            throw new NotFoundException($"Expense with ID {id} not found");
+        }
+
+        // Load the expense with its shares
         var expense = await _context.Expenses
             .Include(e => e.Shares)
-            .FirstOrDefaultAsync(e => e.Id == id);
-
-        if (expense == null)
-            throw new NotFoundException("Expense not found");
+            .FirstAsync(e => e.Id == id);
 
         // Update scalar properties
         expense.Amount = request.Amount;
         expense.Description = request.Description;
         expense.PaidBy = request.PaidBy;
 
-        // Remove existing shares
-        _context.ExpenseShares.RemoveRange(expense.Shares);
-
-        // Recreate share list
+        // Calculate new shares
         var perHead = Math.Round(request.Amount / request.SharedWith.Count, 2);
-
-        foreach (var person in request.SharedWith)
+        var newShares = request.SharedWith.Select(person => new ExpenseShare
         {
-            expense.Shares.Add(new ExpenseShare
-            {
-                Person = person,
-                ShareAmount = perHead,
-                ExpenseId = expense.Id
-            });
+            Person = person,
+            ShareAmount = perHead,
+            ExpenseId = expense.Id
+        }).ToList();
+
+        // Clear existing shares and add new ones
+        expense.Shares.Clear();
+        expense.Shares.AddRange(newShares);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return MapToDTO(expense);
         }
-
-        // Force EF to track the update properly
-        _context.Entry(expense).State = EntityState.Modified;
-
-        await _context.SaveChangesAsync();
-
-        return MapToDTO(expense);
+        catch (DbUpdateConcurrencyException ex)
+        {
+            foreach (var entry in ex.Entries)
+            {
+                var databaseValues = await entry.GetDatabaseValuesAsync();
+                if (databaseValues == null)
+                {
+                    throw new NotFoundException("The expense was deleted by another user");
+                }
+                else
+                {
+                    throw new Exception("The expense was modified by another user. Please refresh and try again.");
+                }
+            }
+            throw;
+        }
     }
 
 

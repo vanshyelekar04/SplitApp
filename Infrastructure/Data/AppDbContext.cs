@@ -14,11 +14,21 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Expense>()
-            .HasMany(e => e.Shares)
-            .WithOne()
-            .HasForeignKey(s => s.ExpenseId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Expense>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasMany(e => e.Shares)
+                  .WithOne() // This was missing the navigation property
+                  .HasForeignKey(s => s.ExpenseId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ExpenseShare>(entity =>
+        {
+            entity.HasKey(s => s.Id);
+            // Add index for better performance
+            entity.HasIndex(s => s.ExpenseId);
+        });
 
         base.OnModelCreating(modelBuilder);
     }
