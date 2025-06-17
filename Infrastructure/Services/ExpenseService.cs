@@ -57,29 +57,39 @@ public class ExpenseService : IExpenseService
 
     public async Task<ExpenseDTO> UpdateExpenseAsync(Guid id, UpdateExpenseRequest request)
     {
-        var expense = await _context.Expenses.Include(e => e.Shares)
+        var expense = await _context.Expenses
+            .Include(e => e.Shares)
             .FirstOrDefaultAsync(e => e.Id == id);
 
         if (expense == null)
             throw new NotFoundException("Expense not found");
 
+        // Update scalar properties
         expense.Amount = request.Amount;
         expense.Description = request.Description;
         expense.PaidBy = request.PaidBy;
 
-        // Explicitly remove previous shares
+        // Remove existing shares
         _context.ExpenseShares.RemoveRange(expense.Shares);
 
+        // Recreate share list
         var perHead = Math.Round(request.Amount / request.SharedWith.Count, 2);
 
-        expense.Shares = request.SharedWith.Select(person => new ExpenseShare
+        foreach (var person in request.SharedWith)
         {
-            Person = person,
-            ShareAmount = perHead,
-            ExpenseId = expense.Id
-        }).ToList();
+            expense.Shares.Add(new ExpenseShare
+            {
+                Person = person,
+                ShareAmount = perHead,
+                ExpenseId = expense.Id
+            });
+        }
+
+        // Force EF to track the update properly
+        _context.Entry(expense).State = EntityState.Modified;
 
         await _context.SaveChangesAsync();
+
         return MapToDTO(expense);
     }
 
