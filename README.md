@@ -1,5 +1,3 @@
-Here's the fully updated `README.md` with detailed JWT token steps and improved Postman collection instructions:
-
 ```markdown
 # 🚀 Split App – Backend API
 
