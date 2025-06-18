@@ -1,5 +1,5 @@
 ```markdown
-# 🚀 Split App – Backend API
+# Split App – Backend API
 
 A REST API for splitting group expenses with balance calculations and settlement summaries.
 
@@ -212,6 +212,4 @@ Live API endpoint:
 4. Ensure CORS is properly configured
 
 ---
-
 Developed by [Vansh Yelekar](https://github.com/vanshyelekar04)
-```
